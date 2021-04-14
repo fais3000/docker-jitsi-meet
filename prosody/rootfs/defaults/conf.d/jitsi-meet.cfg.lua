@@ -26,11 +26,21 @@ asap_accepted_issuers = { "{{ join "\",\"" (splitList "," .Env.JWT_ACCEPTED_ISSU
 asap_accepted_audiences = { "{{ join "\",\"" (splitList "," .Env.JWT_ACCEPTED_AUDIENCES) }}" }
 {{ end }}
 
-{{ if $ENABLE_XMPP_WEBSOCKET }}
+consider_bosh_secure = true;
+
 -- Deprecated in 0.12
 -- https://github.com/bjc/prosody/commit/26542811eafd9c708a130272d7b7de77b92712de
-cross_domain_websocket = { "{{ $PUBLIC_URL }}" };
-consider_bosh_secure = true;
+{{ $XMPP_CROSS_DOMAINS := $PUBLIC_URL }}
+{{ $XMPP_CROSS_DOMAIN := .Env.XMPP_CROSS_DOMAIN | default "" }}
+{{ if eq $XMPP_CROSS_DOMAIN "true"}}
+cross_domain_websocket = true
+cross_domain_bosh = true
+{{ else }}
+{{ if not (eq $XMPP_CROSS_DOMAIN "false") }}
+  {{ $XMPP_CROSS_DOMAINS = list $PUBLIC_URL (print "https://" .Env.XMPP_DOMAIN) .Env.XMPP_CROSS_DOMAIN | join "," }}
+{{ end }}
+cross_domain_websocket = { "{{ join "\",\"" (splitList "," $XMPP_CROSS_DOMAINS) }}" }
+cross_domain_bosh = { "{{ join "\",\"" (splitList "," $XMPP_CROSS_DOMAINS) }}" }
 {{ end }}
 
 VirtualHost "{{ .Env.XMPP_DOMAIN }}"
@@ -76,7 +86,7 @@ VirtualHost "{{ .Env.XMPP_DOMAIN }}"
         "ping";
         "speakerstats";
         "conference_duration";
-        {{ if and $ENABLE_LOBBY (not $ENABLE_GUEST_DOMAIN) }}
+        {{ if $ENABLE_LOBBY }}
         "muc_lobby_rooms";
         {{ end }}
         {{ if .Env.XMPP_MODULES }}
@@ -87,7 +97,7 @@ VirtualHost "{{ .Env.XMPP_DOMAIN }}"
         {{end}}
     }
 
-    {{ if and $ENABLE_LOBBY (not $ENABLE_GUEST_DOMAIN) }}
+    {{ if $ENABLE_LOBBY }}
     main_muc = "{{ .Env.XMPP_MUC_DOMAIN }}"
     lobby_muc = "lobby.{{ .Env.XMPP_DOMAIN }}"
     {{ if .Env.XMPP_RECORDER_DOMAIN }}
@@ -113,19 +123,6 @@ VirtualHost "{{ .Env.XMPP_GUEST_DOMAIN }}"
     allow_empty_token = true
 
     c2s_require_encryption = false
-
-    {{ if $ENABLE_LOBBY }}
-    modules_enabled = {
-        "muc_lobby_rooms";
-    }
-
-    main_muc = "{{ .Env.XMPP_MUC_DOMAIN }}"
-    lobby_muc = "lobby.{{ .Env.XMPP_DOMAIN }}"
-    {{ if .Env.XMPP_RECORDER_DOMAIN }}
-    muc_lobby_whitelist = { "{{ .Env.XMPP_RECORDER_DOMAIN }}" }
-    {{ end }}
-    {{ end }}
-
 {{ end }}
 
 VirtualHost "{{ .Env.XMPP_AUTH_DOMAIN }}"
@@ -169,8 +166,8 @@ Component "{{ .Env.XMPP_MUC_DOMAIN }}" "muc"
     muc_room_locking = false
     muc_room_default_public_jids = true
 
-Component "focus.{{ .Env.XMPP_DOMAIN }}"
-    component_secret = "{{ .Env.JICOFO_COMPONENT_SECRET }}"
+Component "focus.{{ .Env.XMPP_DOMAIN }}" "client_proxy"
+    target_address = "{{ .Env.JICOFO_AUTH_USER }}@{{ .Env.XMPP_AUTH_DOMAIN }}"
 
 Component "speakerstats.{{ .Env.XMPP_DOMAIN }}" "speakerstats_component"
     muc_component = "{{ .Env.XMPP_MUC_DOMAIN }}"
