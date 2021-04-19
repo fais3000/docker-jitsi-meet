@@ -35,6 +35,7 @@ services:
             - CHROME_EXTENSION_BANNER_JSON
             - CONFCODE_URL
             - CONFIG_EXTERNAL_CONNECT
+            - DEFAULT_LANGUAGE
             - DEPLOYMENTINFO_ENVIRONMENT
             - DEPLOYMENTINFO_ENVIRONMENT_TYPE
             - DEPLOYMENTINFO_REGION
@@ -88,12 +89,15 @@ services:
             - RESOLUTION_WIDTH_MIN
             - START_AUDIO_ONLY
             - START_AUDIO_MUTED
+            - START_WITH_AUDIO_MUTED
+            - START_SILENT
             - DISABLE_AUDIO_LEVELS
             - ENABLE_NOISY_MIC_DETECTION
             - START_BITRATE
             - DESKTOP_SHARING_FRAMERATE_MIN
             - DESKTOP_SHARING_FRAMERATE_MAX
             - START_VIDEO_MUTED
+            - START_WITH_VIDEO_MUTED
             - TESTING_CAP_SCREENSHARE_BITRATE
             - TESTING_OCTO_PROBABILITY
             - XMPP_AUTH_DOMAIN
@@ -212,9 +216,6 @@ services:
             - JVB_BREWERY_MUC
             - MAX_BRIDGE_PARTICIPANTS
             - OCTO_BRIDGE_SELECTION_STRATEGY
-            - SENTRY_DSN="${JICOFO_SENTRY_DSN}"
-            - SENTRY_ENVIRONMENT
-            - SENTRY_RELEASE
             - TZ
             - XMPP_DOMAIN
             - XMPP_AUTH_DOMAIN
@@ -258,9 +259,6 @@ services:
             - JVB_OCTO_PUBLIC_ADDRESS
             - JVB_OCTO_BIND_PORT
             - JVB_OCTO_REGION
-            - SENTRY_DSN="${JVB_SENTRY_DSN}"
-            - SENTRY_ENVIRONMENT
-            - SENTRY_RELEASE
             - TZ
         depends_on:
             - prosody
